@@ -27,56 +27,40 @@ class TelegramManager:
                         "/character {имя персонажа} - Отправляет информацию о персонаже")
         self.bot.send_message(chat_id, help_message)
 
-    def send_chapter(self, message, chapter_number):
+    def send_document_or_message(self, message, file_path, not_found_message):
         chat_id = message.chat.id
+        if os.path.isfile(file_path):
+            with open(file_path, 'rb') as file:
+                self.bot.send_document(chat_id, file)
+        else:
+            self.bot.send_message(chat_id, not_found_message)
+
+    def send_chapter(self, message, chapter_number):
         chapter_filename = f"{chapter_number}.pdf"
         chapter_file_path = os.path.join(self.chapters_path, chapter_filename)
-
-        if os.path.isfile(chapter_file_path):
-            with open(chapter_file_path, 'rb') as file:
-                self.bot.send_document(chat_id, file)
-        else:
-            self.bot.send_message(chat_id, f"Глава {chapter_number} не найдена.")
+        self.send_document_or_message(message, chapter_file_path, f"Глава {chapter_number} не найдена.")
 
     def send_episode(self, message, episode_number):
-        chat_id = message.chat.id
         episode_filename = f"{episode_number}.mkv"
         episode_file_path = os.path.join(self.episodes_path, episode_filename)
-
-        if os.path.isfile(episode_file_path):
-            with open(episode_file_path, 'rb') as file:
-                self.bot.send_document(chat_id, file)
-        else:
-            self.bot.send_message(chat_id, f"Эпизод {episode_number} не найден.")
+        self.send_document_or_message(message, episode_file_path, f"Эпизод {episode_number} не найден.")
 
     def send_OVA(self, message, OVA_number):
-        chat_id = message.chat.id
         OVA_filename = f"{OVA_number}.mkv"
         OVA_file_path = os.path.join(self.OVAs_path, OVA_filename)
-
-        if os.path.isfile(OVA_file_path):
-            with open(OVA_file_path, 'rb') as file:
-                self.bot.send_document(chat_id, file)
-        else:
-            self.bot.send_message(chat_id, f"OVA {OVA_number} не найдено.")
+        self.send_document_or_message(message, OVA_file_path, f"OVA {OVA_number} не найдено.")
 
     def send_film(self, message, film_number):
-        chat_id = message.chat.id
         film_filename = f"{film_number}.mkv"
         film_file_path = os.path.join(self.films_path, film_filename)
-
-        if os.path.isfile(film_file_path):
-            with open(film_file_path, 'rb') as file:
-                self.bot.send_document(chat_id, file)
-        else:
-            self.bot.send_message(chat_id, f"Фильм {film_number} не найден.")
+        self.send_document_or_message(message, film_file_path, f"Фильм {film_number} не найден.")
 
     def send_character_info(self, message, name):
         chat_id = message.chat.id
         DB = DatabaseManager('https://narutodb.xyz/api/character/search')
         data = DB.get_character_info_by_name(name)
         if data:
-            formatted_info = JSONFormatter().get_character_debut(data)
+            formatted_info = JSONFormatter().get_character_personal(data)
             self.bot.send_message(chat_id, formatted_info)
         else:
             self.bot.send_message(chat_id, f"Персонаж {name} не найден.")
